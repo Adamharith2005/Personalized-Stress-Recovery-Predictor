@@ -3,11 +3,16 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 
 def train_model():
+    if not os.path.exists('visuals'):
+        os.makedirs('visuals')
+
     df = pd.read_csv('data/processed_health_data.csv')
 
-    # Features: What the model looks at
     features = ['TotalSteps', 'VeryActiveMinutes', 'SedentaryMinutes', 'Calories']
     X = df[features]
     y = df['RecoveryScore']
@@ -20,6 +25,16 @@ def train_model():
     predictions = model.predict(X_test)
     error = mean_absolute_error(y_test, predictions)
     print(f"Model Error: {round(error, 2)} points on the 0-100 scale.")
+
+    importances = model.feature_importances_
+    
+    plt.figure(figsize=(10,6))
+    sns.barplot(x=importances, y=features, palette='viridis')
+    plt.title("What Drives Your Recovery? (Feature Importance)")
+    plt.xlabel("Impact Score")
+    plt.tight_layout()
+    plt.savefig('visuals/feature_importance.png')
+    print("Visual saved to visuals/feature_importance.png")
 
     joblib.dump(model, 'recovery_model.pkl')
     print("Model saved as recovery_model.pkl")
